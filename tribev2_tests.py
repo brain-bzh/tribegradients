@@ -7,63 +7,56 @@ Original file is located at
     https://colab.research.google.com/drive/1MeS3PmPaq5OSWAPMFPGh77tdOldXGdwZ
 """
 
-#import numpy
-#!uv pip install numpy==1.26.6
-!uv pip install "tribev2[plotting] @ git+https://github.com/facebookresearch/tribev2.git"
 
-! uv pip install yt-dlp
+# # Download the YouTube short
+# import subprocess
+# url = "https://www.youtube.com/shorts/3YxtTAMNJhM"
+# output_path = "video.mp4"
+# subprocess.run(["yt-dlp", "-o", output_path, url], check=True)
 
-# Download the YouTube short
-import subprocess
-url = "https://www.youtube.com/shorts/3YxtTAMNJhM"
-output_path = "video.mp4"
-subprocess.run(["yt-dlp", "-o", output_path, url], check=True)
+# from tribev2.demo_utils import TribeModel
 
-!hf auth login
+# model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
 
-from tribev2.demo_utils import TribeModel
+# df = model.get_events_dataframe(video_path="video.mp4.webm")
+# print(df.head())
 
-model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
+# df.to_csv("events.csv")
 
-df = model.get_events_dataframe(video_path="video.mp4.webm")
-print(df.head())
+# import pandas as pd
 
-df.to_csv("events.csv")
+# df = pd.read_csv('events.csv')
 
-import pandas as pd
+# df_short = df[df['start'] < 60]
+# print(df_short.head())
 
-df = pd.read_csv('events.csv')
+# from tribev2 import TribeModel
+# import torch
 
-df_short = df[df['start'] < 60]
-print(df_short.head())
+# model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
 
-from tribev2 import TribeModel
-import torch
+# # TribeModel wraps a Lightning module; find where FmriEncoder lives
+# print(type(model))
+# print(dir(model))  # look for: model, pl_module, brain_model, experiment, etc.
 
-model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="./cache")
+# # Step 1: trigger model setup so the Lightning module gets instantiated
+# model.setup_run()
 
-# TribeModel wraps a Lightning module; find where FmriEncoder lives
-print(type(model))
-print(dir(model))  # look for: model, pl_module, brain_model, experiment, etc.
+# # Then inspect what setup_run created on the object
+# # Look for anything new that appeared, specifically nn.Module attributes
+# import torch.nn as nn
+# for attr in dir(model):
+#     if not attr.startswith('_'):
+#         try:
+#             val = getattr(model, attr)
+#             if isinstance(val, nn.Module):
+#                 print(f"{attr}: {type(val)}")
+#         except Exception:
+#             pass
 
-# Step 1: trigger model setup so the Lightning module gets instantiated
-model.setup_run()
-
-# Then inspect what setup_run created on the object
-# Look for anything new that appeared, specifically nn.Module attributes
-import torch.nn as nn
-for attr in dir(model):
-    if not attr.startswith('_'):
-        try:
-            val = getattr(model, attr)
-            if isinstance(val, nn.Module):
-                print(f"{attr}: {type(val)}")
-        except Exception:
-            pass
-
-# Step 2: check the private attributes, which Pydantic stores separately
-print(model.__pydantic_private__)
-print(model.__dict__)
+# # Step 2: check the private attributes, which Pydantic stores separately
+# print(model.__pydantic_private__)
+# print(model.__dict__)
 
 import torch
 import numpy as np
@@ -139,24 +132,24 @@ import numpy as np
 
 np.savez_compressed('video.npz',preds=preds,segments=segments,df=df_short.to_numpy())
 
-"""# Visualization"""
+# """# Visualization"""
 
-from tribev2.plotting import PlotBrain
-from pathlib import Path
+# from tribev2.plotting import PlotBrain
+# from pathlib import Path
 
-CACHE_FOLDER = Path("./cache")
+# CACHE_FOLDER = Path("./cache")
 
-model = TribeModel.from_pretrained(
-    "facebook/tribev2",
-    cache_folder=CACHE_FOLDER,
-)
-plotter = PlotBrain(mesh="fsaverage5")
+# model = TribeModel.from_pretrained(
+#     "facebook/tribev2",
+#     cache_folder=CACHE_FOLDER,
+# )
+# plotter = PlotBrain(mesh="fsaverage5")
 
-n_timesteps = 15
-fig = plotter.plot_timesteps(preds[:n_timesteps], segments=segments[:n_timesteps], cmap="fire", norm_percentile=99, vmin=.6, alpha_cmap=(0, .2), show_stimuli=True)
+# n_timesteps = 15
+# fig = plotter.plot_timesteps(preds[:n_timesteps], segments=segments[:n_timesteps], cmap="fire", norm_percentile=99, vmin=.6, alpha_cmap=(0, .2), show_stimuli=True)
 
 """# Finetuning the brain encoding layer"""
-
+""" 
 import torch
 import torch.nn as nn
 from tribev2 import TribeModel
@@ -216,4 +209,4 @@ for epoch in range(5):
         optimizer.step()
     print(f"Epoch {epoch+1}  loss={loss.item():.5f}")
 
-torch.save(fmri_enc.state_dict(), f"tribe_finetuned_{TRAINABLE_LAYER.replace('.','_')}.pt")
+torch.save(fmri_enc.state_dict(), f"tribe_finetuned_{TRAINABLE_LAYER.replace('.','_')}.pt") """
