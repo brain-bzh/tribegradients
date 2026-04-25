@@ -11,10 +11,6 @@ print(summary[["subject", "timeline"]].to_string())
 
 events = study.run()
 
-#print(f"{len(events)} events across {events.subject.nunique()} subjects")
-#print(events[["type", "start", "duration", "timeline"]].head(8).to_string())
-
-
 query = transforms.QueryEvents(query='movie == "bourne" ')
 events = query(events)
 
