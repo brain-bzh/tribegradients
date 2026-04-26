@@ -3,6 +3,32 @@ import os
 import numpy as np
 import h5py
 
+from nilearn.connectome import ConnectivityMeasure
+from nilearn.datasets import (
+    fetch_atlas_surf_destrieux,
+    load_fsaverage,
+)
+from nilearn.maskers import SurfaceLabelsMasker
+from nilearn.surface import SurfaceImage
+
+from nilearn.datasets import load_fsaverage_data
+from nilearn.surface import load_surf_data
+from nilearn.datasets import load_fsaverage
+
+schaefer_1000_surf = load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot')
+fsaverage = load_fsaverage("fsaverage5")
+
+labels_img = SurfaceImage(
+    mesh=fsaverage["pial"],
+    data={
+        "left": load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot'),
+        "right": load_surf_data('./rh.Schaefer2018_1000Parcels_7Networks_order.annot'),
+    },
+)
+
+labels_masker = SurfaceLabelsMasker(
+    labels_img=labels_img,  verbose=1
+).fit()
 
 
 
@@ -58,3 +84,34 @@ def load_fmri(root_data_dir, subject,average=True):
 
     ### Output ###
     return fmri
+
+def get_masked_data(surfdata):
+    fsaverage_data = load_fsaverage_data()
+    data_dict = {
+        "left": surfdata[:, :10242].T,
+        "right": surfdata[:, 10242:20484].T,
+    }
+
+    surfimg = SurfaceImage(fsaverage_data.mesh, data_dict)
+
+    fsaverage = load_fsaverage("fsaverage5")
+
+    rh_data = load_surf_data('./rh.Schaefer2018_1000Parcels_7Networks_order.annot')
+    lh_data = load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot')
+
+    ## add 500 to non zero values in rh_data to make them distinct from lh_data
+    rh_data[rh_data != 0] += 500
+
+    labels_img = SurfaceImage(
+        mesh=fsaverage["pial"],
+        data={
+            "left": lh_data,
+            "right": rh_data,
+        },
+    )
+
+    labels_masker = SurfaceLabelsMasker(
+        labels_img=labels_img,  verbose=1
+    ).fit()
+
+    return labels_masker.transform(surfimg)
