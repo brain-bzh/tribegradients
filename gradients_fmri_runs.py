@@ -71,7 +71,8 @@ for movie in movies_names:
     if movie == 'bourne':
         gm.fit([c for c in connectivity_matrix])
         gradients[movie] = gm.aligned_
-        refgradients = gm.aligned_[0] # take the first run as reference for alignment
+        # refgradients = gm.aligned_[0] # take the first run as reference for alignment
+        refgradients = np.mean(gm.aligned_, axis=0) # take the average gradient as reference for alignment
         ## save the reference gradients for bourne as a numpy array 
         np.savez_compressed(f'reference_gradients_bourne_subject_{subject}.npz',refgradients=refgradients)
         print(f"Reference {movie} gradients shapes: {refgradients.shape}")
