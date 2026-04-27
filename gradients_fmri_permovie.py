@@ -7,7 +7,7 @@ from nilearn.maskers import NiftiLabelsMasker
 from nilearn.datasets import fetch_atlas_schaefer_2018, load_fsaverage
 from nilearn.plotting import plot_stat_map, plot_surf_stat_map, plot_surf_stat_map
 import matplotlib.pyplot as plt
-
+from nilearn.surface import SurfaceImage
 
 fsaverage = load_fsaverage()
 
@@ -69,7 +69,7 @@ for i, movie in enumerate(movies_names):
 ## Visualize the gradients for each movie in a large figure with subplots
 
 fig,ax = plt.subplots(len(movies_names), 8, figsize=(24, 8 * len(movies_names)),subplot_kw={'projection': '3d'})
-from nilearn.surface import SurfaceImage
+
 
 for i, movie in enumerate(movies_names):
     gradient_img1 = SurfaceImage.from_volume(mesh=fsaverage["pial"], volume_img=masker.inverse_transform(gradients[movie][:, 0]),radius=5)

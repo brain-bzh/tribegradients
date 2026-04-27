@@ -51,7 +51,7 @@ for movie in movies_names:
 
 ## Compute sets of functional connectivity matrix for each movie using nilearn ConnectivityMeasure, but keeping a matrix per run. Alignement per movie
 gradients = {}
-
+eigenvalues = {}
 connectivity_matrices = {}
 for movie in movies_names:
     # Create a ConnectivityMeasure object for correlation
@@ -78,6 +78,9 @@ for movie in movies_names:
     else:
         gm.fit([c for c in connectivity_matrix],reference=refgradients)
         gradients[movie] = gm.aligned_
+    
+    eigenvalues[movie] = gm.lambdas_
+    
     print(f"{movie} gradients shapes: {[g.shape for g in gradients[movie]]}")
 
 
@@ -87,15 +90,27 @@ for movie in movies_names:
 # Compute the correlation matrix between the gradients of all movies and runs
 # each gradient is a vector of shape (1000,), we will compute the correlation between all gradients across all movies and runs, resulting in a matrix of shape (number of gradients, number of gradients)
 all_gradients = []
+all_eigenvalues = []
 for movie in movies_names:
     for run in range(connectivity_matrices[movie].shape[0]):
         all_gradients.append(gradients[movie][run])
+        all_eigenvalues.append(eigenvalues[movie][run])
 
 
 ## turn it into a numpy array
 all_gradients = np.stack(all_gradients)
+all_eigenvalues = np.stack(all_eigenvalues)
 # check the shape of all_gradients
 print(f"all_gradients shape: {all_gradients.shape}")
+# check the shape of all_eigenvalues
+print(f"all_eigenvalues shape: {all_eigenvalues.shape}")
+## save the gradients for this subject as a numpy array
+## generate also a list of labels for each gradient, in the format movie_run, for example bourne_1, bourne_2, etc.
+labels = []
+for movie in movies_names:
+    for run in range(connectivity_matrices[movie].shape[0]):
+        labels.append(f"{movie}_{run}")
+np.savez_compressed(f'all_gradients_subject_{subject}.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues)
 
 ## reshape all_gradients to be of shape (number of gradients, number of features) for correlation computation
 all_gradients = all_gradients.reshape(all_gradients.shape[0], -1)
