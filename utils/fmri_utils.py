@@ -2,7 +2,7 @@
 import os
 import numpy as np
 import h5py
-
+import re
 from nilearn.connectome import ConnectivityMeasure
 from nilearn.datasets import (
     fetch_atlas_surf_destrieux,
@@ -84,6 +84,24 @@ def load_fmri(root_data_dir, subject,average=True):
 
     ### Output ###
     return fmri
+
+def load_chunk_predictions(npz_path, movie_name):
+    data = np.load(npz_path, allow_pickle=True)
+    preds = data['preds']
+    segments = data['segments']
+
+    
+    chunk_predictions = {}
+    for i, segment in enumerate(segments):
+        timeline = segment.timeline
+        match = re.search(r'chunk=(\d+)', timeline)
+        if not match:
+            raise ValueError(f'No chunk number found in timeline: {timeline}')
+        chunk_number = int(match.group(1))
+        chunk_predictions.setdefault(chunk_number, []).append(preds[i])
+
+    chunk_predictions = {k: np.array(v) for k, v in chunk_predictions.items()}
+    return {f'{movie_name}{k:02d}': v for k, v in chunk_predictions.items()}
 
 def get_masked_data(surfdata):
     fsaverage_data = load_fsaverage_data()

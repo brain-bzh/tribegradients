@@ -1,7 +1,7 @@
 import numpy as np
 from nilearn.connectome import ConnectivityMeasure
 from brainspace.gradient import GradientMaps
-from utils.fmri_utils import get_masked_data, load_fmri
+from utils.fmri_utils import get_masked_data, load_fmri,load_chunk_predictions
 import argparse
 from nilearn.maskers import NiftiLabelsMasker
 from nilearn.datasets import fetch_atlas_surf_destrieux, load_fsaverage
@@ -27,15 +27,25 @@ args = parser.parse_args()
 basedir = args.basedir
 
 # Load the fMRI responses
-fmri = np.load('bourne_chunk_predictions.npz')
+
+# movie names 
+movies_names = ['bourne', 'wolf', 'figures', 'life']
+
+chunk_preds = {}
+for movie in movies_names:
+    chunk_preds[movie] = load_chunk_predictions(f'{movie}_predictions.npz', movie)
+
+# make a single disctionnary fmri with the four movies and their chunks predictions
+fmri = {}
+for movie in movies_names:
+    for chunk in chunk_preds[movie].keys():
+        fmri[f'{movie}_{chunk}'] = chunk_preds[movie][chunk]
 
 # Print all available movies
 print(f"Tribe model fMRI movies splits name and shape:")
 for key, value in fmri.items():
     print(key + " " + str(value.shape))
 
-# movie names 
-movies_names = ['bourne', 'wolf', 'figures', 'life']
 
 ## regroup fMRI time series for each movie
 fmri_stack = {}
@@ -45,9 +55,8 @@ for movie in movies_names:
 
 
 ## Compute sets of functional connectivity matrix for each movie using nilearn ConnectivityMeasure, but keeping a matrix per run. Alignement per movie
-## Compute sets of functional connectivity matrix for each movie using nilearn ConnectivityMeasure, but keeping a matrix per run. Alignement per movie
 gradients = {}
-
+eigenvalues = {}
 connectivity_matrices = {}
 for movie in movies_names:
     try:
@@ -71,7 +80,7 @@ for movie in movies_names:
         ## estimate the gradients for the current movie, using the reference gradients for alignment
         gm.fit([c for c in connectivity_matrix],reference=refgradients)
         gradients[movie] = gm.aligned_
-                    
+        eigenvalues[movie] = gm.lambdas_
         print(f"{movie} gradients shapes: {[g.shape for g in gradients[movie]]}")
     except Exception as e:
         print(f"Error processing {movie}: {e}")
@@ -84,19 +93,27 @@ for movie in movies_names:
 # Compute the correlation matrix between the gradients of all movies and runs
 # each gradient is a vector of shape (1000,), we will compute the correlation between all gradients across all movies and runs, resulting in a matrix of shape (number of gradients, number of gradients)
 all_gradients = []
+all_eigenvalues = []
 for movie in movies_names:
     if movie in gradients:
         for run in range(len(gradients[movie])):
             all_gradients.append(gradients[movie][run])
+            all_eigenvalues.append(eigenvalues[movie][run])
     else:
         print(f"Warning: {movie} gradients not found, skipping...")
 
 
 ## turn it into a numpy array
 all_gradients = np.stack(all_gradients)
+all_eigenvalues = np.stack(all_eigenvalues)
 # check the shape of all_gradients
 print(f"all_gradients shape: {all_gradients.shape}")
-
+print(f"all_eigenvalues shape: {all_eigenvalues.shape}")
+labels = []
+for movie in movies_names:
+    for run in range(connectivity_matrices[movie].shape[0]):
+        labels.append(f"{movie}_{run}")
+np.savez_compressed(f'all_gradients_tribe.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues)
 ## reshape all_gradients to be of shape (number of gradients, number of features) for correlation computation
 all_gradients = all_gradients.reshape(all_gradients.shape[0], -1)    
 print(f"all_gradients shape: {all_gradients.shape}")
