@@ -22,9 +22,12 @@ destrieux = fetch_atlas_surf_destrieux()
 
 parser = argparse.ArgumentParser(description='Load and analyze fMRI data')
 parser.add_argument('--basedir', type=str, default='/home/nfarrugi/Documents/git/download', help='Base directory path')
+parser.add_argument('--compute_reference', action='store_true', help='Compute the reference gradients from the first movie (bourne) instead of using the saved reference (default: False)')
+parser.add_argument('--gradients', type=int, default=4, help='Number of gradients to compute (default: 4)')
 args = parser.parse_args()
 
 basedir = args.basedir
+ngrads = args.gradients
 
 # Load the fMRI responses
 
@@ -67,19 +70,39 @@ for movie in movies_names:
         connectivity_matrix = connectivity_measure.fit_transform([get_masked_data(f) for f in fmri_stack[movie]])
 
         # Threshold the connectivity matrix to keep only the top 10% of connections
-        connectivity_matrix = np.stack([threshold_proportional(cc, 0.1) for cc in connectivity_matrix])
+        #connectivity_matrix = np.stack([threshold_proportional(cc, 0.1) for cc in connectivity_matrix])
         connectivity_matrices[movie] = connectivity_matrix
         print(f"{movie} affinity matrix shape: {connectivity_matrix.shape}")
 
         ## Compute gradients for each movie using BrainSpace GradientMaps
-        gm = GradientMaps(n_components=10, random_state=0,alignment='procrustes', kernel='normalized_angle')
+        gm = GradientMaps(n_components=ngrads, random_state=0,alignment='procrustes', kernel='normalized_angle')
         
-        ## load the reference gradients from the fMRI data
-        refgradients = np.load(f'reference_gradients_bourne_subject_1.npz')['refgradients']
+        ## check the argument to compute the reference gradients or use the saved reference
+        if movie == 'bourne' and args.compute_reference:
+            print(f"Computing reference gradients for {movie}...")
+            gm.fit([c for c in connectivity_matrix])
+            gradients[movie] = gm.aligned_
+            refgradients = np.mean(gm.aligned_, axis=0) # take the average gradient as reference for alignment
+            ## save the reference gradients for bourne as a numpy array 
+            np.savez_compressed(f'reference_gradients_bourne_tribe.npz',refgradients=refgradients)
+            print(f"Reference {movie} gradients shapes: {refgradients.shape}")
+        else:
+            
+            ## load the reference gradients from the fMRI data
+            if args.compute_reference:
+                print(f"Using tribe gradients for {movie}...")
+                refgradients = np.load(f'reference_gradients_bourne_tribe.npz')['refgradients']
+            else:
+                #print(f"Using reference gradients from subject 1 for {movie}...")
+                #refgradients = np.load(f'reference_gradients_bourne_subject_1.npz')['refgradients']
 
-        ## estimate the gradients for the current movie, using the reference gradients for alignment
-        gm.fit([c for c in connectivity_matrix],reference=refgradients)
-        gradients[movie] = gm.aligned_
+                ## load the movie_gradients.csv (reference from Samara's paper)
+                refgradients = np.load('samara2023_gradient_maps.npz')['refgradients']
+                print(f"Loaded reference gradients shapes: {refgradients.shape}")
+
+            ## estimate the gradients for the current movie, using the reference gradients for alignment
+            gm.fit([c for c in connectivity_matrix],reference=refgradients)
+            gradients[movie] = gm.aligned_
         eigenvalues[movie] = gm.lambdas_
         print(f"{movie} gradients shapes: {[g.shape for g in gradients[movie]]}")
     except Exception as e:

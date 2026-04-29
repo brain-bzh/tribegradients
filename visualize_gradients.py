@@ -1,4 +1,5 @@
 # %%
+import pandas as pd
 import numpy as np
 import argparse
 from nilearn.maskers import NiftiLabelsMasker
@@ -27,13 +28,19 @@ schaefer_atlas = fetch_atlas_schaefer_2018(n_rois=1000, yeo_networks=7)
 labelsmasker = NiftiLabelsMasker(labels_img=schaefer_atlas['maps'], standardize=True, memory='nilearn_cache')
 labelsmasker.fit()
 
+labels = schaefer_atlas.labels  # This is a list of byte strings
 
-labels = []
-for i, label in enumerate(labelsmasker.region_names_.values()):
-    if i % 3 == 1:
-        labels.append(label)
-    else:
-        labels.append("")
+# Convert byte strings to regular strings and extract the network name
+# Example: '7Networks_LH_Vis_1' -> 'Vis'
+network_names = [label.split('_')[2] for label in labels[1:]]  # Skip the first label which is usually 'Background'
+assert len(network_names) == 1000  # Should be 1000
+print(pd.Series(network_names).unique())  # Check the format of the split labels
+# Create a mapping DataFrame
+mapping_df = pd.DataFrame({
+    'parcel_index': range(1000),
+    'network': network_names
+})
+
 
 gm=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['all_gradients']
 movielabels=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['labels']
