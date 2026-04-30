@@ -1,0 +1,3 @@
+[submodule "tribegradients.figure"]
+	path = tribegradients.figure
+	url = https://github.com/lunebellec/tribegradients.figure/
