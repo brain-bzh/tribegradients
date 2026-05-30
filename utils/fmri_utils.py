@@ -15,14 +15,14 @@ from nilearn.datasets import load_fsaverage_data
 from nilearn.surface import load_surf_data
 from nilearn.datasets import load_fsaverage
 
-schaefer_1000_surf = load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot')
+schaefer_1000_surf = load_surf_data('./data/annotations/lh.Schaefer2018_1000Parcels_7Networks_order.annot')
 fsaverage = load_fsaverage("fsaverage5")
 
 labels_img = SurfaceImage(
     mesh=fsaverage["pial"],
     data={
-        "left": load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot'),
-        "right": load_surf_data('./rh.Schaefer2018_1000Parcels_7Networks_order.annot'),
+        "left": load_surf_data('./data/annotations/lh.Schaefer2018_1000Parcels_7Networks_order.annot'),
+        "right": load_surf_data('./data/annotations/rh.Schaefer2018_1000Parcels_7Networks_order.annot'),
     },
 )
 
@@ -114,8 +114,8 @@ def get_masked_data(surfdata):
 
     fsaverage = load_fsaverage("fsaverage5")
 
-    rh_data = load_surf_data('./rh.Schaefer2018_1000Parcels_7Networks_order.annot')
-    lh_data = load_surf_data('./lh.Schaefer2018_1000Parcels_7Networks_order.annot')
+    rh_data = load_surf_data('./data/annotations/rh.Schaefer2018_1000Parcels_7Networks_order.annot')
+    lh_data = load_surf_data('./data/annotations/lh.Schaefer2018_1000Parcels_7Networks_order.annot')
 
     ## add 500 to non zero values in rh_data to make them distinct from lh_data
     rh_data[rh_data != 0] += 500

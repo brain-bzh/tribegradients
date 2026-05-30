@@ -17,14 +17,14 @@ def main():
     model = TribeModel.from_pretrained("facebook/tribev2", cache_folder="/Brain/private/nfarrugi/",device="cuda")
 
     df = model.get_events_dataframe(video_path="video.mp4")
-    df.to_csv('events.csv')
-    #df = pd.read_csv('events.csv')
+    df.to_csv('outputs/events.csv')
+    #df = pd.read_csv('outputs/events.csv')
     print(df.head())
     preds, segments = model.predict(events=df)
     print(preds.shape)  # (n_timesteps, n_vertices)
 
     # save the predictions
-    np.savez_compressed('testpreds.npz',preds=preds)
+    np.savez_compressed('outputs/testpreds.npz',preds=preds)
 
 
 if __name__ == "__main__":

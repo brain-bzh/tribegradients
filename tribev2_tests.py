@@ -112,7 +112,7 @@ for h in hooks:
 for layer_name, tensors in features.items():
     stacked = torch.cat(tensors, dim=0)
     safe_name = layer_name.replace('.', '_')
-    np.save(f"features_{safe_name}.npy", stacked.numpy())
+    np.save(f"outputs/features_{safe_name}.npy", stacked.numpy())
     print(f"  {layer_name:40s}  shape={tuple(stacked.shape)}")
 
 all_features_dict = {}
@@ -122,15 +122,15 @@ for layer_name, tensors in features.items():
     all_features_dict[safe_name] = stacked.numpy()
     print(f"  {layer_name:40s}  shape={{tuple(stacked.shape)}}")
 
-np.savez_compressed("all_features.npz", **all_features_dict)
-print("All features saved to all_features.npz")
+np.savez_compressed("outputs/all_features.npz", **all_features_dict)
+print("All features saved to outputs/all_features.npz")
 
 preds, segments = model.predict(events=df_short)
 print(f"Predictions shape: {preds.shape}  (n_timesteps, n_vertices)")
 
 import numpy as np
 
-np.savez_compressed('video.npz',preds=preds,segments=segments,df=df_short.to_numpy())
+np.savez_compressed('outputs/video.npz',preds=preds,segments=segments,df=df_short.to_numpy())
 
 # """# Visualization"""
 

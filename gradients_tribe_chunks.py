@@ -36,7 +36,7 @@ movies_names = ['bourne', 'wolf', 'figures', 'life']
 
 chunk_preds = {}
 for movie in movies_names:
-    chunk_preds[movie] = load_chunk_predictions(f'{movie}_predictions.npz', movie)
+    chunk_preds[movie] = load_chunk_predictions(f'outputs/predictions/{movie}_predictions.npz', movie)
 
 # make a single disctionnary fmri with the four movies and their chunks predictions
 fmri = {}
@@ -84,20 +84,20 @@ for movie in movies_names:
             gradients[movie] = gm.aligned_
             refgradients = np.mean(gm.aligned_, axis=0) # take the average gradient as reference for alignment
             ## save the reference gradients for bourne as a numpy array 
-            np.savez_compressed(f'reference_gradients_bourne_tribe.npz',refgradients=refgradients)
+            np.savez_compressed(f'data/npz/reference_gradients_bourne_tribe.npz',refgradients=refgradients)
             print(f"Reference {movie} gradients shapes: {refgradients.shape}")
         else:
             
             ## load the reference gradients from the fMRI data
             if args.compute_reference:
                 print(f"Using tribe gradients for {movie}...")
-                refgradients = np.load(f'reference_gradients_bourne_tribe.npz')['refgradients']
+                refgradients = np.load(f'data/npz/reference_gradients_bourne_tribe.npz')['refgradients']
             else:
                 #print(f"Using reference gradients from subject 1 for {movie}...")
-                #refgradients = np.load(f'reference_gradients_bourne_subject_1.npz')['refgradients']
+                #refgradients = np.load(f'data/npz/reference_gradients_bourne_subject_1.npz')['refgradients']
 
                 ## load the movie_gradients.csv (reference from Samara's paper)
-                refgradients = np.load('samara2023_gradient_maps.npz')['refgradients']
+                refgradients = np.load('data/npz/samara2023_gradient_maps.npz')['refgradients']
                 print(f"Loaded reference gradients shapes: {refgradients.shape}")
 
             ## estimate the gradients for the current movie, using the reference gradients for alignment
@@ -136,7 +136,7 @@ labels = []
 for movie in movies_names:
     for run in range(connectivity_matrices[movie].shape[0]):
         labels.append(f"{movie}_{run}")
-np.savez_compressed(f'all_gradients_tribe.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues)
+np.savez_compressed(f'data/npz/all_gradients_tribe.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues)
 ## reshape all_gradients to be of shape (number of gradients, number of features) for correlation computation
 all_gradients = all_gradients.reshape(all_gradients.shape[0], -1)    
 print(f"all_gradients shape: {all_gradients.shape}")
@@ -151,7 +151,7 @@ for k in fmri.keys():
 
 plt.figure(figsize=(10, 8))
 plot_matrix(correlation_matrix, figure=(10, 8), cmap='coolwarm',reorder=True,labels=labels_matrix,vmin=-1, vmax=1,title=f'Cosine Similarity between gradients - TRIBEv2 model')
-plt.savefig(f'cosine_similarity_gradients_tribe.png')
+plt.savefig(f'outputs/figures/cosine_similarity_gradients_tribe.png')
 plt.close()
 
 
@@ -162,7 +162,7 @@ linked = linkage(1 - correlation_matrix, 'ward')
 plt.figure(figsize=(10, 8))
 dendrogram(linked, labels=labels_matrix, orientation='top', distance_sort='descending', show_leaf_counts=True)
 plt.title(f'Hierarchical Clustering of gradients - TRIBEv2 model')
-plt.savefig(f'hierarchical_clustering_gradients_tribe.png')
+plt.savefig(f'outputs/figures/hierarchical_clustering_gradients_tribe.png')
 plt.close()
 
 ## cut the dendrogram to get clusters of gradients, and print the clusters for 4 clusters

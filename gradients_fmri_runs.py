@@ -47,9 +47,11 @@ movies_names = ['bourne', 'wolf', 'figures', 'life']
 
 ## regroup fMRI time series for each movie
 fmri_stack = {}
+labels_stack = {}
 for movie in movies_names:
     keys_movie = [key for key in fmri.keys() if movie in key]
     fmri_stack[movie] = [fmri[key] for key in keys_movie]
+    labels_stack[movie] = [key for key in keys_movie]
 
 
 ## Compute sets of functional connectivity matrix for each movie using nilearn ConnectivityMeasure, but keeping a matrix per run. Alignement per movie
@@ -77,18 +79,18 @@ for movie in movies_names:
         # refgradients = gm.aligned_[0] # take the first run as reference for alignment
         refgradients = np.mean(gm.aligned_, axis=0) # take the average gradient as reference for alignment
         ## save the reference gradients for bourne as a numpy array 
-        np.savez_compressed(f'reference_gradients_bourne_subject_{subject}.npz',refgradients=refgradients)
+        np.savez_compressed(f'data/npz/reference_gradients_bourne_subject_{subject}.npz',refgradients=refgradients)
         print(f"Reference {movie} gradients shapes: {refgradients.shape}")
     else:
         # load the reference gradients for bourne as a numpy array
         if args.compute_reference:
-            refgradients = np.load(f'reference_gradients_bourne_subject_{subject}.npz', allow_pickle=True)['refgradients']
+            refgradients = np.load(f'data/npz/reference_gradients_bourne_subject_{subject}.npz', allow_pickle=True)['refgradients']
             print(f"Loaded reference from subject {subject} and movie Bourne gradients shapes: {refgradients.shape}")
         else:
             #print(f"Using computed reference from TRIBE ")
-            #refgradients = refgradients = np.load(f'reference_gradients_bourne_tribe.npz')['refgradients']
+            #refgradients = refgradients = np.load(f'data/npz/reference_gradients_bourne_tribe.npz')['refgradients']
 
-            refgradients = np.load('samara2023_gradient_maps.npz')['refgradients']
+            refgradients = np.load('data/npz/samara2023_gradient_maps.npz')['refgradients']
             print(f"Loaded reference gradients shapes: {refgradients.shape}")
         gm.fit([c for c in connectivity_matrix],reference=refgradients)
         gradients[movie] = gm.aligned_
@@ -105,7 +107,9 @@ for movie in movies_names:
 # each gradient is a vector of shape (1000,), we will compute the correlation between all gradients across all movies and runs, resulting in a matrix of shape (number of gradients, number of gradients)
 all_gradients = []
 all_eigenvalues = []
+all_labels = []
 for movie in movies_names:
+    all_labels.extend(labels_stack[movie])
     for run in range(connectivity_matrices[movie].shape[0]):
         all_gradients.append(gradients[movie][run])
         all_eigenvalues.append(eigenvalues[movie][run])
@@ -118,14 +122,15 @@ all_eigenvalues = np.stack(all_eigenvalues)
 print(f"all_gradients shape: {all_gradients.shape}")
 # check the shape of all_eigenvalues
 print(f"all_eigenvalues shape: {all_eigenvalues.shape}")
+
 ## save the gradients for this subject as a numpy array
 ## generate also a list of labels for each gradient, in the format movie_run, for example bourne_1, bourne_2, etc.
 labels = []
 for movie in movies_names:
     for run in range(connectivity_matrices[movie].shape[0]):
         labels.append(f"{movie}_{run}")
-np.savez_compressed(f'all_gradients_subject_{subject}.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues)
-
+np.savez_compressed(f'data/npz/all_gradients_subject_{subject}.npz',all_gradients=all_gradients,labels=labels,eigenvalues=all_eigenvalues,labels2=all_labels)
+print(all_labels)
 ## reshape all_gradients to be of shape (number of gradients, number of features) for correlation computation
 all_gradients = all_gradients.reshape(all_gradients.shape[0], -1)
 ## using sklearn pairwise cosine similarity
@@ -139,7 +144,7 @@ for k in fmri.keys():
 
 plt.figure(figsize=(10, 8))
 plot_matrix(correlation_matrix, figure=(10, 8), cmap='coolwarm',reorder=True,labels=labels_matrix,vmin=-1, vmax=1,title=f'Cosine Similarity between gradients - subject {subject}')
-plt.savefig(f'cosine_similarity_gradients_subject_{subject}.png')
+plt.savefig(f'outputs/figures/cosine_similarity_gradients_subject_{subject}.png')
 plt.close()
 
 
@@ -150,7 +155,7 @@ linked = linkage(1 - correlation_matrix, 'ward')
 plt.figure(figsize=(10, 8))
 dendrogram(linked, labels=labels_matrix, orientation='top', distance_sort='descending', show_leaf_counts=True)
 plt.title(f'Hierarchical Clustering of gradients - subject {subject}')
-plt.savefig(f'hierarchical_clustering_gradients_subject_{subject}.png')
+plt.savefig(f'outputs/figures/hierarchical_clustering_gradients_subject_{subject}.png')
 plt.close()
 
 ## cut the dendrogram to get clusters of gradients, and print the clusters for 4 clusters

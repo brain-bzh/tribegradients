@@ -37,9 +37,9 @@ ind_average = mapping_df.groupby('network')['parcel_index'].apply(list)
 
 all_gradients = {}
 for subject in ['subject_1', 'subject_2', 'subject_3', 'subject_5', 'tribe']:
-    gm=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['all_gradients']
-    movielabels=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['labels']
-    eigenvalues=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['eigenvalues']
+    gm=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['all_gradients']
+    movielabels=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['labels']
+    eigenvalues=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['eigenvalues']
     all_gradients[subject] = []
     for network in ind_average.index:
         indices = ind_average[network]

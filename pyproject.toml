@@ -1,0 +1,23 @@
+[project]
+name = "tribegradients"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "bctpy>=0.6.1",
+    "brainspace>=0.1.22",
+    "datalad>=1.4.1",
+    "h5py>=3.16.0",
+    "matplotlib>=3.10.9",
+    "moviepy>=2.2.1",
+    "neuralfetch>=0.0.1",
+    "neuromaps",
+    "nilearn>=0.13.1",
+    "numpy>=2.4.4",
+    "scikit-learn>=1.8.0",
+    "seaborn>=0.13.2",
+]
+
+[tool.uv.sources]
+neuromaps = { git = "https://github.com/netneurolab/neuromaps" }

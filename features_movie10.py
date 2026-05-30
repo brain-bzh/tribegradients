@@ -10,9 +10,13 @@ import os
 
 parser = argparse.ArgumentParser(description='Generate predictions for Algonauts2025 movie data')
 parser.add_argument('--movie', type=str, default='bourne', help='Movie name to process')
-parser.add_argument('--output', type=str, default='./', help='Output path for predictions')
+parser.add_argument('--output', type=str, default='outputs/predictions/', help='Output path for predictions')
 parser.add_argument('--features', action='store_true', help='Extract internal features')
 args = parser.parse_args()
+
+# Ensure output directory exists
+import os
+os.makedirs(args.output, exist_ok=True)
 
 study = Algonauts2025(path="/Brain/public/datasets/neuromod/",query = "task in ['movie10'] and subject == 'Algonauts2025/sub-01' ",infra={"backend": "Cached", "folder": "/Brain/public/datasets/neuromod/cache"},infra_timelines={"cluster": None}) ## the code then looks for path + 'download/algonauts_2025.competitors' 
 

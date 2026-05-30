@@ -42,9 +42,9 @@ mapping_df = pd.DataFrame({
 })
 
 
-gm=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['all_gradients']
-movielabels=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['labels']
-eigenvalues=np.load(f'all_gradients_{subject}.npz',allow_pickle=True)['eigenvalues']
+gm=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['all_gradients']
+movielabels=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['labels']
+eigenvalues=np.load(f'data/npz/all_gradients_{subject}.npz',allow_pickle=True)['eigenvalues']
 print(gm.shape)  # (number of gradients, number of features)
 
 
@@ -54,7 +54,7 @@ sns.boxplot(data=eigenvalues, orient="h")
 plt.yticks(ticks=np.arange(eigenvalues.shape[1]), labels=[f'Gradient {i+1}' for i in range(eigenvalues.shape[1])])
 plt.xlabel('Eigenvalue')
 plt.title(f'Distribution of Eigenvalues across Movies and Runs for {subject}')
-plt.savefig(f'eigenvalues_boxplot_{subject}.png')
+plt.savefig(f'outputs/figures/eigenvalues_boxplot_{subject}.png')
 plt.show()
 
 average = np.mean(gm, axis=0)
@@ -113,7 +113,7 @@ for i,cur_img in enumerate(iter_img(gradient_img)):
     )
 
 plt.suptitle(f'Average across all runs and movies for {subject}')
-plt.savefig(f'average_gradient_{subject}.png')
+plt.savefig(f'outputs/figures/average_gradient_{subject}.png')
 plt.close()
 
 
@@ -186,7 +186,7 @@ for i,cur_img in enumerate(iter_img(gradient_img)):
     )
 
 plt.suptitle(f'Variance across all runs and movies for {subject}')
-plt.savefig(f'variance_gradient_{subject}.png')
+plt.savefig(f'outputs/figures/variance_gradient_{subject}.png')
 plt.close()
 
 

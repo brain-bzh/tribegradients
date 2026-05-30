@@ -176,5 +176,5 @@ plt.suptitle(f"Subject {subject}", fontsize=16)
 
 
 
-plt.savefig(f'gradients_fmri_subject_{subject}.png', dpi=300)
+plt.savefig(f'outputs/figures/gradients_fmri_subject_{subject}.png', dpi=300)
 plt.close()
