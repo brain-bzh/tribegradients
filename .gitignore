@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# source files generated from another repo 
+data/*
+docs/*
+
+# generated files
+outputs/*
+ridgeacross/*
+testridge/*
